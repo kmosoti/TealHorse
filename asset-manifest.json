@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/TealHorse/static/css/main.97183486.chunk.css",
-    "main.js": "/TealHorse/static/js/main.a9d30a3a.chunk.js",
-    "main.js.map": "/TealHorse/static/js/main.a9d30a3a.chunk.js.map",
+    "main.js": "/TealHorse/static/js/main.f0627a55.chunk.js",
+    "main.js.map": "/TealHorse/static/js/main.f0627a55.chunk.js.map",
     "runtime-main.js": "/TealHorse/static/js/runtime-main.a6157903.js",
     "runtime-main.js.map": "/TealHorse/static/js/runtime-main.a6157903.js.map",
     "static/js/2.51f8db27.chunk.js": "/TealHorse/static/js/2.51f8db27.chunk.js",
@@ -16,6 +16,6 @@
     "static/js/runtime-main.a6157903.js",
     "static/js/2.51f8db27.chunk.js",
     "static/css/main.97183486.chunk.css",
-    "static/js/main.a9d30a3a.chunk.js"
+    "static/js/main.f0627a55.chunk.js"
   ]
 }
