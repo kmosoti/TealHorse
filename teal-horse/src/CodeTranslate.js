@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {parserFunction,sampleXML,translateFunction} from './parsing.js'
+import {parserFunction,translateFunction} from './parsing.js'
 
 
 function CodeTranslate(){
@@ -15,10 +15,10 @@ function CodeTranslate(){
   const handleInput = (e) => {
     updateInput(e.target.value)
   }
-  const handleTest = (e) => {
-    console.log(sampleXML())
-    updateInput(sampleXML());
-  }
+  // const handleTest = (e) => {
+  //   console.log(sampleXML())
+  //   updateInput(sampleXML());
+  // }
 
   return(
     <div className="main">

@@ -1,177 +1,164 @@
-import XMLToReact from '@condenast/xml-to-react';
+// import XMLToReact from '@condenast/xml-to-react';
 
-export const parserFunction = (xmlString) => {
+export const  parserFunction = (xmlString) => {
     let xmlElements = []
     let parser = new DOMParser();
     const androidDOM = parser.parseFromString(xmlString, "text/xml");
-    console.log(androidDOM);
+    //console.log(androidDOM.activeElement);
     //Code checks if their is an error in the code you've entered
     if(androidDOM.activeElement.textContent && androidDOM.activeElement.textContent.includes("XML Parsing Error")){
-      console.log(androidDOM.activeElement.textContent);
+      //console.log(androidDOM.activeElement.textContent);
       return "XML Parsing Error"
     }
-
     //Grabs the lists of parsed elements 
     const nodeList = androidDOM.firstChild.childNodes;
-    //console.log(String(nodeList.item(0)) === '[object Text]');
-
-    console.log(nodeList)
-    for(var i = 0; i < nodeList.length; i++ ){
+    const layoutAttributes = []
+    //console.log(androidDOM.activeElement.attributes)
+    for(let i = 0; i < androidDOM.activeElement.attributes.length; i++){
+      // if(supportLayoutAttributes.includes(node.localName))
+      //console.log(androidDOM.activeElement.attributes[i])
+      if(supportLayoutAttributes.includes(androidDOM.activeElement.attributes[i].localName)){
+        layoutAttributes.push(androidDOM.activeElement.attributes[i])
+      }
+    }
+    const layoutDesc = [androidDOM.activeElement.nodeName,layoutAttributes ]
+    //console.log(layoutAttributes)
+    //console.log(nodeList)
+    for(let i = 0; i < nodeList.length; i++ ){
       //Loops through the parsed elements and grabs what is usable and appends it to the array of xmlElements
       if(String(nodeList.item(i)) !== '[object Text]') xmlElements.push(nodeList.item(i));
     }
-    //console.log(String(xmlElements[0].outerHTML));
-    
-    //Returns a string containing each element seperated by two new line characters
-    var s = new XMLSerializer();
-    console.log(s.serializeToString(xmlElements[0]))
-    return xmlElements
-  }
+    return [layoutDesc, xmlElements]
+}
 
   export const translateFunction = (elementArray) => {
+    /// Element Array [layout name, layout attributes]
     let juniorArray = []
     let stylesArray = []
-    var arraylength = elementArray.length
-    const xmlToReact = new XMLToReact({
-      Example: (attrs) => ({ type: 'ul', props: attrs }),
-      Item: (attrs) => ({ type: 'li', props: attrs })
-    });
-    
+    var arraylength = elementArray[1].length
+    const androidLayout = elementArray[0][0]
+    const androidLayoutAttributes = []
 
-    if(elementArray === 'XML Parsing Error'){
+    for( let i = 0; i < elementArray[0][1].length; i++){
+      //console.log(elementArray[0][1][i])
+      androidLayoutAttributes.push(elementArray[0][1][i])
+    }
+
+    if(elementArray[1] === 'XML Parsing Error'){
       window.alert('Invalid Entry')
       return 'Invalid Entry'
     }
     else{
       for(let i = 0; i<arraylength; i++){
-        console.log(elementArray[i].localName)
-        juniorArray.push(
-        `
-        <${elementArray[i].localName} styles={styles.${elementArray[i].localName}}>
-          Lorem ipsum dolor sit amet
-        </${elementArray[i].localName}>
-        `
-        )
+        console.log(elementArray[1][i].localName.toLowerCase())
+        if(supportedElements.includes(elementArray[1][i].localName.toLowerCase())){
+          const androidElement = elementArray[1][i].localName.toLowerCase()
+          juniorArray.push(
+          `
+          <${equivalentComponents[androidElement]} styles={styles.${elementArray[1][i].localName}}>
+            Lorem ipsum dolor sit amet
+          </${equivalentComponents[androidElement]}>
+        `)
+        }
+        else{
+          juniorArray.push(
+            `
+            {/*<${elementArray[1][i].localName} styles={styles.${elementArray[1][i].localName}}>
+              Lorem ipsum dolor sit amet
+          </${elementArray[1][i].localName}>*/}
+          `)
+        }
         stylesArray.push(
         `
-        ${elementArray[i].localName} : {
-          flex: 1,
-          alightItmes: 'center'
+        ${elementArray[1][i].localName} : {
+          ${getReactAttributes(elementArray[1][i].attributes)}
         }
         `
         )
       }
-      const reactTree = xmlToReact.convert(`
-      <Example name="simple">
-      </Example>
-      `);
-      
       let reactElements = buildReactClass(juniorArray.join(""))
-      let stylesOutput = buildReactStyles(stylesArray.join(""))  
+      //console.log("AndroidLayout: "+androidLayoutAttributes)
+      let stylesOutput = buildReactStyles(androidLayoutAttributes, stylesArray.join(","))  
       return reactElements.concat("\n",stylesOutput)
-      //return elementArray.join("\n\n");
     }
   }
 
 const buildReactClass = (elements) => {
-    return `import {StyleSheet} from "react-native"
+    return `import {StyleSheet} from "react-native"\nimport React from 'react';
     
 const OutPutClassFunction = () =>{
   return(
-    <div>
+    <div styles={styles.container}>
       ${elements}
     </div>
   )
 }
-    `
+
+export default OutPutClassFunction
+      `
 }
 
-const buildReactStyles = (styles) => {
-  return `\\\\React Native Styling
-cosnt styles = StyleSheet.create({
-  ${styles}
+const getReactAttributes = (elementAttributes) => {
+  let translatedAttributes = []
+  for(let i = 0; i < elementAttributes.length; i++){
+   //console.log(elementAttributes[i].localName)
+    if(supportedElementAttributes.includes(elementAttributes[i].localName)){
+      //console.log(elementAttributes[i].localName)
+      //console.log(supportedLayoutParameters[elementAttributes[i].localName])
+      translatedAttributes.push(`${supportedLayoutParameters[elementAttributes[i].localName]}:"${elementAttributes[i].nodeValue}"`
+        )
+    }
+  }
+  //onsole.log(elementAttributes)
+  return translatedAttributes.join(',\n\t  ')
+}
+
+const buildReactStyles = (androidLayout, styles) => {
+
+  return `//React Native Styling
+const styles = StyleSheet.create({
+  \tcontainer : { 
+\t  ${getReactAttributes(androidLayout)}
+  \t},${styles}
 })
 `
 }
-const myConverter = (attributes) => {
-    return {
-      type: 'div',
-      props: {
-        className: 'test'
-      }
-    }
-  }
 
-  export const sampleXML = () => {
-      return `
-    <?xml version="1.0" encoding="utf-8"?>
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        tools:context=".ui.login.LoginActivity">
-    
-        <EditText
-            android:id="@+id/username"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="96dp"
-            android:hint="@string/prompt_email"
-            android:inputType="textEmailAddress"
-            android:selectAllOnFocus="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+const supportLayoutAttributes = ['layout_width', 'layout_height', 'paddingLeft', 'paddingTop', 'paddingRight', 'paddingBottom','padding']
+const supportedElementAttributes = [
+  'layout_width', 
+  'layout_height', 
+  'paddingLeft', 
+  'paddingTop', 
+  'paddingRight', 
+  'paddingBottom',
+  'padding', 
+  'layout_margin', 
+  'layout_marginTop', 
+  'layout_marginBottom', 
+  'layout_marginLeft',
+  'layout_marginRight'
+]
 
-        <EditText
-            android:id="@+id/password"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="@string/prompt_password"
-            android:imeActionLabel="@string/action_sign_in_short"
-            android:imeOptions="actionDone"
-            android:inputType="textPassword"
-            android:selectAllOnFocus="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/username" />
-    
-        <Button
-            android:id="@+id/login"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="start"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="64dp"
-            android:enabled="false"
-            android:text="@string/action_sign_in"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/password"
-            app:layout_constraintVertical_bias="0.2" />
-    
-        <ProgressBar
-            android:id="@+id/loading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="64dp"
-            android:layout_marginBottom="64dp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/password"
-            app:layout_constraintStart_toStartOf="@+id/password"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.3" />
-    
-    </androidx.constraintlayout.widget.ConstraintLayout>
-      `
-  }
+const supportedLayoutParameters =  {
+  'layout_width': 'width',
+  'layout_height': 'height',
+  'padding': 'margin',
+  'paddingLeft': 'marginLeft',
+  'paddingRight': 'marginRight',
+  'paddingTop': 'marginTop',
+  'paddingBottom': 'marginBottom',
+  'layout_margin': 'margin',
+  'layout_marginLeft': 'marginLeft',
+  'layout_marginRight': 'marginRight',
+  'layout_marginTop': 'marginTop',
+  'layout_marginBottom': 'marginBottom'
+
+}
+
+const supportedElements = ['button', 'edittext']
+
+const equivalentComponents = {
+  'button':'button',
+  'edittext':'textarea'
+}
